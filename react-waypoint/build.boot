@@ -19,8 +19,8 @@
        :license     {"MIT" "https://opensource.org/licenses/MIT"}})
 
 (deftask download-react-waypoint []
-  (download :url      "https://github.com/brigade/react-waypoint/archive/v1.0.3.zip"
-            :checksum "E0F34B37E96CE512DB7CE220953E7A0C"
+  (download :url      "https://github.com/tobiasquinn/react-waypoint/archive/v1.0.3-tq.zip"
+            :checksum "EA6672FF72A420D70ED93CAFBBD651BD"
             :unzip    true))
 
 (deftask package []
