@@ -2,7 +2,7 @@
 
 [](dependency)
 ```clojure
-[cljsjs/react-waypoint "1.0.3-0"] ;; latest release
+[cljsjs/react-waypoint "1.2.3-0"] ;; latest release
 ```
 [](/dependency)
 

@@ -1,14 +1,17 @@
 (set-env!
-  :resource-paths #{"resources"}
-  :dependencies '[[adzerk/bootlaces   "0.1.11" :scope "test"]
-                  [cljsjs/boot-cljsjs "0.5.0"  :scope "test"]
-                  [cljsjs/react       "0.13.0-0"]])
+ :resource-paths #{"resources"}
+ :dependencies '[[cljsjs/boot-cljsjs "0.5.1"  :scope "test"]
+                 [cljsjs/react-dom   "0.14.3-1"]
+                 [cljsjs/react       "0.14.3-0"]])
 
-(require '[adzerk.bootlaces :refer :all]
-         '[cljsjs.boot-cljsjs.packaging :refer :all])
+(require '[cljsjs.boot-cljsjs.packaging :refer :all]
+         '[boot.core :as boot]
+         '[boot.tmpdir :as tmpd]
+         '[clojure.java.io :as io]
+         '[boot.util :refer [sh]])
 
-(def +version+ "1.0.3-0")
-(bootlaces! +version+)
+(def +lib-version+ "1.2.3")
+(def +version+ (str +lib-version+ "-0"))
 
 (task-options!
  pom  {:project     'cljsjs/react-waypoint
@@ -19,17 +22,34 @@
        :license     {"MIT" "https://opensource.org/licenses/MIT"}})
 
 (deftask download-react-waypoint []
-  (download :url      "https://github.com/tobiasquinn/react-waypoint/archive/v1.0.3-tq.zip"
-            :checksum "EA6672FF72A420D70ED93CAFBBD651BD"
+  (download :url      "https://github.com/brigade/react-waypoint/archive/v1.2.3.zip"
+            :checksum "438FF9B4518F8CE9369792E0EE897A49"
             :unzip    true))
+
+(deftask build-react-waypoint []
+  (let [tmp (boot/tmp-dir!)]
+    (with-pre-wrap
+      fileset
+      ;; Copy all files in fileset to temp directory
+      (doseq [f (->> fileset boot/input-files)
+              :let [target (io/file tmp (tmpd/path f))]]
+        (io/make-parents target)
+        (io/copy (tmpd/file f) target))
+      (binding [boot.util/*sh-dir* (str (io/file tmp (format "react-waypoint-%s" +lib-version+)))]
+        ((sh "npm" "install"))
+        ((sh "npm" "run" "prepublish"))
+        ;; patch to remove module.exports, require and esmodule export
+        ((sh "patch" "build/npm/waypoint.js" "../waypoint.js.patch")))
+      (-> fileset (boot/add-resource tmp) boot/commit!))))
 
 (deftask package []
   (comp
-    (download-react-waypoint)
-    (sift :move {#"^react-.*/build/npm/waypoint.js"
-                 "cljsjs/react-waypoint/development/react-waypoint.inc.js"})
-;;                 #"^react-.*/dist/react-waypoint.min.js"
-;;                 "cljsjs/react-waypoint/production/react-waypoint.min.inc.js"})
-    (sift :include #{#"^cljsjs"})
-    (deps-cljs :name "cljsjs.react-waypoint"
-               :requires ["cljsjs.react"])))
+   (download-react-waypoint)
+   (build-react-waypoint)
+   (sift :move {#"^.*waypoint\.js$"
+                "cljsjs/react-waypoint/development/react-waypoint.inc.js"})
+   (minify :in "cljsjs/react-waypoint/development/react-waypoint.inc.js"
+           :out "cljsjs/react-waypoint/production/react-waypoint.min.inc.js")
+   (sift :include #{#"^cljsjs"})
+   (deps-cljs :name "cljsjs.react-waypoint"
+              :requires ["cljsjs.react" "cljsjs.react.dom"])))
