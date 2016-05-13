@@ -9,6 +9,7 @@ var Waypoint = {
     "above": {},
     "below": {},
     "getWindow": function () {},
+    "_currentPosition": function () {},
     "defaultProps": {
         "threshold": {},
         "onEnter": function () {},
