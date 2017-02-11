@@ -1,8 +1,8 @@
 (set-env!
  :resource-paths #{"resources"}
- :dependencies '[[cljsjs/boot-cljsjs "0.5.1"  :scope "test"]
-                 [cljsjs/react-dom   "15.0.2-0"]
-                 [cljsjs/react       "15.0.2-0"]])
+ :dependencies '[[cljsjs/boot-cljsjs "0.5.2"  :scope "test"]
+                 [cljsjs/react-dom   "15.3.1-0"]
+                 [cljsjs/react       "15.3.1-0"]])
 
 (require '[cljsjs.boot-cljsjs.packaging :refer :all]
          '[boot.core :as boot]
@@ -51,4 +51,6 @@
            :out "cljsjs/react-waypoint/production/react-waypoint.min.inc.js")
    (sift :include #{#"^cljsjs"})
    (deps-cljs :name "cljsjs.react-waypoint"
-              :requires ["cljsjs.react" "cljsjs.react.dom"])))
+     :requires ["cljsjs.react" "cljsjs.react.dom"])
+   (pom)
+   (jar)))
